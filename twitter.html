@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>pp_round_logo</title>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.3.15/p5.min.js"></script>
+    <script type="text/javascript" src="jquery.cookie.js"></script>
+    <script type="text/javascript">
+    /* @pjs preload="pp_established.png"; */
+
+    var logo;
+    var r = 250;
+    
+    function setup() 
+    {
+        var canvas = createCanvas(640, 640).parent('logoCanvas');
+        logo = loadImage("pint.png");
+    }
+
+    function drawTextOnCurve(message, angleStart, angleSpread)
+    {
+        var ratio;
+        var arcLength = 0;
+        var totalWidth = 0;
+    
+        // Determine actual anglular "length" of the message.
+        for (var i = 0; i < message.length; i++)
+        {
+            totalWidth += textWidth(message.charAt(i));
+        }
+        arcLength = totalWidth / r;
+        //println("arcLength is " + arcLength);
+        //println("Desired arcLength is " + angleSpread);
+    
+        // Calculate ratio between actual and desired angle.
+        ratio = angleSpread / arcLength;
+        //println("Ratio is " + ratio);
+    
+        // Print the message
+        arcLength = 0;
+        for (var i = 0; i < message.length; i++)
+        {
+            // Instead of a constant width, we check the width of each character.
+            var currentChar = message.charAt(i);
+            var w = textWidth(currentChar);
+            w *= ratio;
+    
+            // Each box is centered so we move half the width
+            arcLength += w/2;
+            // Angle in radians is the arclength divided by the radius
+            // Starting on the left side of the circle by adding PI
+            var theta = PI + angleStart + arcLength / r;    
+    
+            push();
+            // Polar to cartesian coordinate conversion
+            translate(r * cos(theta), r * sin(theta));
+            // Rotate the box
+            rotate(theta + PI/2); // rotation is offset by 90 degrees
+            // Display the character
+            //fill(0);
+            text(currentChar, 0, 0);
+            pop();
+            // Move halfway again
+            arcLength += w/2;
+        }
+    }
+
+    function drawLogo(newHeight)
+    {
+        var newWidth = newHeight * logo.width / logo.height;
+        image(logo,  (width - newWidth) / 2, (height - newHeight) / 2, newWidth, newHeight);
+    }
+
+    function draw() 
+    {
+        var city = $('#city').val();;
+        var fontSize = $('#fontSizeSocial').val();
+        var textHeight = fontSize * 1.3;
+        var textY = width / 2 + textHeight * 4 / 16;
+
+        background(255);
+
+        drawLogo(logo.height);
+        
+        // City Name
+        textFont("Helvetica");
+        textSize(fontSize);
+        textStyle(BOLD);
+        textAlign(CENTER, CENTER);
+        smooth();
+
+        if (true) {
+            var rectOffset = 3;
+            fill(255, 255, 255, 128);
+            noStroke();
+            rect(0, height / 2 - textHeight / 2 - rectOffset, width, textHeight + rectOffset);
+        }
+        
+        if (false)
+        {
+            var fontStroke = 1;
+            fill(255);
+            noStroke();
+            for (var y = -1 * fontStroke; y <= fontStroke; y++)
+                for (var x = -1 * fontStroke; x <= fontStroke; x++)
+                    text(city, width / 2 + x, textY + y);
+        }
+        
+        fill(0);
+        noStroke();
+        stroke(255);
+        strokeWeight(2);
+        text(city, width / 2, textY);
+    }
+
+    /* ===============================================================
+       ===== LOAD / SAVE STATE
+       =============================================================== */
+    
+    function getParameterByName(name)
+    {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+        return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+    
+    function preloadTextbox()
+    {
+        var value = getParameterByName('city')
+        if (0 == value.length)
+            value = $.cookie('city');
+        if (undefined != value && value.length > 0)
+            $('#cityListInput').val(value)
+        value = getParameterByName('city')
+        if (0 == value.length)
+            value = $.cookie('fontSizeSocial');
+        if (undefined != value && value.length > 0)
+        {
+            $("#fontSizeSocial option").each(function()
+            {
+                if ($(this).val() == value)
+                    $(this).prop('selected', true);
+            });
+        }
+    }
+    
+    function saveCookies()
+    {
+        $.cookie('city', $('#city').val());
+        $.cookie('fontSizeSocial', $('#fontSizeSocial').val());
+    }
+    </script>
+    <style type="text/css" media="screen">
+    form {margin:0; padding:0;}
+    #cityListInput {width:40em;}
+    #return {position:fixed; top:5px; right:5px; font-size:8pt;}
+    </style>
+</head>
+<body id="pp_round_logo" onload="preloadTextbox();">
+    <div id="logoCanvas"></div>
+    <!--
+        Portland,       2010-07
+        Seattle,        2011-11
+        London,         2013-11
+        Chicago,        2014-03
+        Phoenix,        2014-06
+        Bay Area,       2014-07
+        Washington DC,  2014-09
+        Boston,         2014-09
+        Austin,         2014-09
+        Pittsburgh,     2014-10
+        Montreal,       2014-11
+    -->
+    <form onsubmit="return false;">
+        <p>City: <input type="text" id="city" value="Portland" onchange="saveCookies();" onblur="saveCookies();"></p>
+        <p>Font Size: <select id="fontSizeSocial" onchange="saveCookies();">
+            <option value="32" selected>32pt</option>
+            <option value="36">16pt</option>
+            <option value="48">48pt</option>
+            <option value="60">60pt</option>
+            <option value="72">72pt</option>
+            <option value="84">84pt</option>
+            <option value="96">96pt</option>
+            <option value="108">108pt</option>
+        </select>
+        </p>
+    </form>
+    <p><small><em>
+        Pass in &ldquo;<code>?cities=...</code>&rdquo; or &ldquo;<code>?size=...</code>&rdquo; query strings to prepopulate these fields.
+    </em></small></p>
+    <div id="return">
+        <a href="index.html">return to main menu</a>
+    </div>
+</body>
+</html>

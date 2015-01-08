@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>pp_round_logo</title>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.3.15/p5.min.js"></script>
+    <script type="text/javascript" src="jquery.cookie.js"></script>
+    <script type="text/javascript">
+    /* @pjs preload="pp_established.png"; */
+
+    var logo;
+    var r = 250;
+    
+    function setup() 
+    {
+        var canvas = createCanvas(640, 640).parent('logoCanvas');
+        logo = loadImage("pp_established.png");
+    }
+
+    function drawTextOnCurve(message, angleStart, angleSpread)
+    {
+        var ratio;
+        var arcLength = 0;
+        var totalWidth = 0;
+    
+        // Determine actual anglular "length" of the message.
+        for (var i = 0; i < message.length; i++)
+        {
+            totalWidth += textWidth(message.charAt(i));
+        }
+        arcLength = totalWidth / r;
+        //println("arcLength is " + arcLength);
+        //println("Desired arcLength is " + angleSpread);
+    
+        // Calculate ratio between actual and desired angle.
+        ratio = angleSpread / arcLength;
+        //println("Ratio is " + ratio);
+    
+        // Print the message
+        arcLength = 0;
+        for (var i = 0; i < message.length; i++)
+        {
+            // Instead of a constant width, we check the width of each character.
+            var currentChar = message.charAt(i);
+            var w = textWidth(currentChar);
+            w *= ratio;
+    
+            // Each box is centered so we move half the width
+            arcLength += w/2;
+            // Angle in radians is the arclength divided by the radius
+            // Starting on the left side of the circle by adding PI
+            var theta = PI + angleStart + arcLength / r;    
+    
+            push();
+            // Polar to cartesian coordinate conversion
+            translate(r * cos(theta), r * sin(theta));
+            // Rotate the box
+            rotate(theta + PI/2); // rotation is offset by 90 degrees
+            // Display the character
+            //fill(0);
+            text(currentChar, 0, 0);
+            pop();
+            // Move halfway again
+            arcLength += w/2;
+        }
+    }
+
+    function drawLogo(newWidth)
+    {
+        var newHeight = newWidth * logo.height / logo.width;
+        image(logo,  (width - newWidth) / 2, (height - newHeight) / 2, newWidth, newHeight);
+    }
+
+    function dashedCircle(radius, steps, dashWidth, dashSpacing)
+    {
+        var dashPeriod = dashWidth + dashSpacing;
+        var lastDashed = false;
+        for (var i = 0; i < steps; i++) 
+        {
+          var curDashed = (i % dashPeriod) < dashWidth;
+          if (curDashed && !lastDashed) 
+          {
+            beginShape();
+          }
+          if (!curDashed && lastDashed) 
+          {
+            endShape();
+          }
+          if (curDashed) {
+            var theta = map(i, 0, steps, 0, TWO_PI);
+            vertex(cos(theta) * radius, sin(theta) * radius);
+          }
+          lastDashed = curDashed;
+        }
+        if (lastDashed) 
+        {
+          endShape();
+        }
+    }
+
+    function draw() 
+    {
+        var cityList;
+        var fontSize = $('#fontSize').val();
+        var sloganAngle = parseInt($('#angle').val(), 10) * PI / 180;
+        var circles = $('#circles').prop('checked');
+
+        background(255);
+
+        drawLogo(640 - 250);
+    
+        // Start in the center and draw the circle
+        translate(width / 2, height / 2);
+        noFill();
+        if ('1' == circles)
+        {
+            stroke(192);
+            //ellipse(0, 0, r*2, r*2);
+            dashedCircle(r - 10, 700, 2, 2);
+            stroke(0);
+            ellipse(0, 0, (r + fontSize * 1.4) * 2, (r + fontSize * 1.4) * 2);
+        }
+        stroke(0);
+    
+        // Slogan
+        textFont("Helvetica");
+        textSize(fontSize);
+        textStyle(BOLD);
+        textAlign(CENTER);
+        smooth();
+        fill(0);
+        noStroke();
+        drawTextOnCurve("Beer, friends, puzzles", 0, sloganAngle);
+    
+        // City list
+        cities = $('#cityListInput').val().split(',');
+        cityList = " \u2605 ";
+        for (var i = 0; i < cities.length; i++)
+        {
+            cityList += cities[i].trim();
+            cityList += " \u2605 ";
+        }
+        if ($('#uppercase').prop('checked'))
+            cityList = cityList.toUpperCase();
+        textFont("Helvetica");
+        textSize(fontSize);
+        textStyle(NORMAL);
+        textAlign(CENTER);
+        smooth();
+        fill(128);
+        noStroke();
+        drawTextOnCurve(cityList, sloganAngle, 2 * PI - sloganAngle);
+    }
+    
+    /* ===============================================================
+       ===== LOAD / SAVE STATE
+       =============================================================== */
+    
+    function getParameterByName(name)
+    {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+        return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+    
+    function preloadTextbox()
+    {
+        var value = getParameterByName('cities')
+        if (0 == value.length)
+            value = $.cookie('cities');
+        if (undefined != value && value.length > 0)
+            $('#cityListInput').val(value)
+        value = getParameterByName('size')
+        if (0 == value.length)
+            value = $.cookie('fontSize');
+        if (undefined != value && value.length > 0)
+        {
+            $("#fontSize option").each(function()
+            {
+                if ($(this).val() == value)
+                    $(this).prop('selected', true);
+            });
+        }
+        value = getParameterByName('angle')
+        if (0 == value.length)
+            value = $.cookie('angle');
+        if (undefined != value && value.length > 0)
+        {
+            $("#angle option").each(function()
+            {
+                if ($(this).val() == value)
+                    $(this).prop('selected', true);
+            });
+        }
+        value = getParameterByName('uppercase');
+        if (0 == value.length)
+            value = $.cookie('uppercase');
+        if (undefined != value && '1' == value)
+            $('#uppercase').prop('checked', true);
+        value = getParameterByName('circles');
+        if (0 == value.length)
+            value = $.cookie('circles');
+        if (undefined != value && '1' == value)
+            $('#circles').prop('checked', true);
+    }
+    
+    function saveCookies()
+    {
+        $.cookie('cities', $('#cityListInput').val());
+        $.cookie('fontSize', $('#fontSize').val());
+        $.cookie('angle', $('#angle').val());
+        $.cookie('uppercase', $('#uppercase').prop('checked') ? '1' : '0');
+        $.cookie('circles', $('#circles').prop('checked') ? '1' : '0');
+    }
+    </script>
+    <style type="text/css" media="screen">
+    form {margin:0; padding:0;}
+    #cityListInput {width:40em;}
+    #return {position:fixed; top:5px; right:5px; font-size:8pt;}
+    </style>
+</head>
+<body id="pp_round_logo" onload="preloadTextbox();">
+    <div id="logoCanvas"></div>
+    <!--
+        Portland,       2010-07
+        Seattle,        2011-11
+        London,         2013-11
+        Chicago,        2014-03
+        Phoenix,        2014-06
+        Bay Area,       2014-07
+        Washington DC,  2014-09
+        Boston,         2014-09
+        Austin,         2014-09
+        Pittsburgh,     2014-10
+        Montreal,       2014-11
+    -->
+    <form onsubmit="return false;">
+        <p>City List: <input type="text" id="cityListInput" value="Portland, Seattle, London, Chicago, Phoenix" onchange="saveCookies();" onblur="saveCookies();"></p>
+        <p>Font Size: <select id="fontSize" onchange="saveCookies();">
+            <option value="10">10pt</option>
+            <option value="12">12pt</option>
+            <option value="14">14pt</option>
+            <option value="16">16pt</option>
+            <option value="18">18pt</option>
+            <option value="20">20pt</option>
+            <option value="22">22pt</option>
+            <option value="24">24pt</option>
+            <option value="26">26pt</option>
+            <option value="28">28pt</option>
+            <option value="30">30pt</option>
+            <option value="32" selected>32pt</option>
+            </select>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Bold Angle: <select id="angle" onchange="saveCookies();">
+            <option value="45">45&deg;</option>
+            <option value="50">50&deg;</option>
+            <option value="55">55&deg;</option>
+            <option value="60">60&deg;</option>
+            <option value="65">65&deg;</option>
+            <option value="70">70&deg;</option>
+            <option value="75">75&deg;</option>
+            <option value="80">80&deg;</option>
+            <option value="85">85&deg;</option>
+            <option value="90" selected>90&deg;</option>
+            </select>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <label><input type="checkbox" id="uppercase" value="1" onchange="saveCookies();"/> Force-Uppercase?</label>
+            <label><input type="checkbox" id="circles" value="1" onchange="saveCookies();"/> Circles?</label>
+        </p>
+    </form>
+    <p><small><em>
+        Notes: Cities are comma-delimited. 
+        Pass in &ldquo;<code>?cities=...</code>&rdquo;, &ldquo;<code>?size=...</code>&rdquo;, &ldquo;<code>?angle=...</code>&rdquo;, or &ldquo;<code>?uppercase=...</code>&rdquo; query strings to prepopulate these fields.
+    </em></small></p>
+    <div id="return">
+        <a href="index.html">return to main menu</a>
+    </div>
+</body>
+</html>

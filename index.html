@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>Puzzled Pint Logo Generator</title>
+    <style type="text/css" media="screen">
+    @media all {
+        @font-face {
+        	font-family: 'Dakota Regular';
+        	src: url('fonts/Dakota Regular.eot');
+        	src: local('â˜º'), url('fonts/Dakota Regular.woff') format('woff'), url('fonts/Dakota Regular.ttf') format('truetype'), url('fonts/Dakota Regular.svg') format('svg');
+        	font-weight: normal;
+        	font-style: normal;
+        }
+        body {
+            font-family:sans-serif;
+            margin: 0;
+            padding: 5px 50px;
+        }
+        h1 {
+            font-family:'Dakota Regular',Sans-Serif;
+            padding:0;
+            margin:0;
+            font-size: 24pt;
+        }
+        div.columns {
+            width: 860px;
+            margin: 0 auto;
+        }
+        div.column {
+            width: 276px;
+            float:left;
+            padding: 5px;
+            margin: 0;
+        }
+        div.title {
+            text-align:center;
+        }
+        #footer {
+            font-size: 8pt;
+            font-style: italic;
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+        }
+    }
+    
+    @media all and (max-width: 859px) {
+        div.columns {
+            width: 100%;
+        }
+        div.column {
+            float: none;
+            margin: 3em 0;
+        }
+    }
+    </style>
+</head>
+<body id="index" onload="">
+    <h1>Puzzled Pint Logo Generator</h1>
+    
+    <p>
+        Welcome to the <a href="http://puzzledpint.com">Puzzled Pint</a> logo generator.
+        Please pick an option below.
+    </p>
+    
+    <div class="columns">
+        <div class="column">
+            <a href="seal.html"><img src="seal_example.png" width="256" height="256" border="0" /></a><br />
+            <div class="title"><a href="seal.html">Round Seal</a></div><br />
+            The round seal with cities around the outside
+        </div>
+        <div class="column">
+            <a href="twitter.html"><img src="twitter_example.png" width="256" height="256" border="0" /></a><br />
+            <div class="title"><a href="twitter.html">Social Media: Twitter</a></div><br />
+            Twitter image branded for Puzzled Pint plus a city
+        </div>
+        <div class="column">
+            <a href="twitter.html"><img src="facebook_example.png" width="256" height="256" border="0" /></a><br />
+            <div class="title"><a href="twitter.html">Social Media: Facebook</a></div><br />
+            Facebook image branded for Puzzled Pint plus a city
+        </div>
+        <br style="clear:both;" />
+    </div>
+
+    <table border="0" cellspacing="5" cellpadding="5">
+        <tr>
+            <td class="i"></td>
+            <td class="t"></td>
+        </tr>
+            <td class="i"></td>
+            <td class="t"></td>
+        <tr>
+        </tr>
+    </table>
+
+    <div id="footer">
+        The source code for this project is available at <a href="TODO">the puzzlint_logo_generator Github project</a>.
+    </div>
+</body>
+</html>
