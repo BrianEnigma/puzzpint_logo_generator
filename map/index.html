@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>pp_map</title>
+    <!-- script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.3.15/p5.min.js"></script -->
+    <script type="text/javascript" src="processing.min.js"></script>
+    <script type="text/processing" data-processing-target="mapCanvas">
+        /* @pjs preload="world.png,pintpin.png"; */
+
+    var map;
+    var pin;
+    
+    final int X_FUDGE_FACTOR = -20;
+    final int Y_FUDGE_FACTOR = -8;
+    final int MOUSE_TOLERANCE = 5;
+    string hoverLink = '';
+    int waitCursor = 0;
+   
+    /* pint glass icon with drop shadow (like Google Earth) */
+
+    var CITIES = [
+        {
+            name : 'Portland',
+            lat : 45.5200 - 3 /* visually offset from Seattle */,
+            long : -122.6819,
+            twitter : '@PuzzPintPDX',
+            facebook : 'fb.com/PuzzPintPDX',
+            link : 'http://puzzledpint.com/about/',
+        },
+        {
+            name : 'Seattle, Central',
+            lat : 47.6069,
+            long : -122.3331,
+            twitter : '@PuzzPintSeattle',
+            facebook : 'fb.com/PuzzPintSeattle',
+            link : 'http://puzzledpint.com/about/',
+        },
+        {
+            name : 'Seattle, East',
+            lat : 47.6694,
+            long : -122.1239 + 5 /* visually offset it */,
+            twitter : '@PuzzPintSeattle',
+            facebook : 'fb.com/PuzzPintSeattle',
+            link : 'http://puzzledpint.com/about/',
+        },
+        {
+            name : 'London',
+            lat : 51.5072,
+            long : 0.1275,
+            twitter : '@PuzzPintLondon',
+            facebook : 'fb.com/PuzzPintLondon',
+            link : 'http://puzzledpint.com/about/',
+        },
+        {
+            name : 'Chicago',
+            lat : 41.8369,
+            long : -87.6847,
+            twitter : '@PuzzPintChi',
+            facebook : 'fb.com/PuzzPintChi',
+            link : 'http://puzzledpint.com/about/',
+        },
+        {
+            name : 'Phoenix',
+            lat : 33.4500,
+            long : -112.0667,
+            twitter : '',
+            facebook : '',
+            link : 'http://puzzledpint.com/about/',
+        },
+        {
+            name : 'Bay Area',
+            lat : 37.7833,
+            long : -122.4167,
+            twitter : '@PuzzPintBAY',
+            facebook : 'fb.com/PuzzPintBAY',
+            link : 'http://puzzledpint.com/about/',
+        },
+        {
+            name : 'Washington DC',
+            lat : 38.8951,
+            long : -77.0367,
+            twitter : '',
+            facebook : '',
+            link : 'http://puzzledpint.com/about/',
+        },
+        {
+            name : 'Boston',
+            lat : 42.3581,
+            long : -71.0636,
+            twitter : '@PuzzPintBoston',
+            facebook : 'fb.com/PuzzPintBoston',
+            link : 'http://puzzledpint.com/about/',
+        },
+        {
+            name : 'Austin',
+            lat : 30.2500,
+            long : -97.7500,
+            twitter : '',
+            facebook : '',
+            link : 'http://puzzledpint.com/about/',
+        },
+        {
+            name : 'Pittsburgh',
+            lat : 40.4417,
+            long : -80.0000,
+            twitter : '',
+            facebook : '',
+            link : 'http://puzzledpint.com/about/',
+        },
+        {
+            name : 'Montreal',
+            lat : 45.5000,
+            long : -73.5667,
+            twitter : '@PuzzPintMTL',
+            facebook : 'fb.com/PuzzPintMTL',
+            link : 'http://puzzledpint.com/about/',
+        },
+    ];
+    void setup() 
+    {
+        size(640, 356);
+        // You can swap out the map image, but the projection needs to be a grid:
+        // longitude and latitude, at right angles, at regular spacing.
+        map = loadImage("world.png");
+        pin = loadImage("pintpin.png");
+    }
+
+    int latToY(lat) {return (height / 2 - height * lat / 90.0 / 2 + height + Y_FUDGE_FACTOR) % height;}
+    int longToX(long) {return (width / 2 + width * long / 180.0 / 2 + width + X_FUDGE_FACTOR) % width;}
+    void drawPin(item)
+    {
+        x = longToX(item.long);
+        y = latToY(item.lat);
+        if (mouseX >= x - MOUSE_TOLERANCE && mouseX <= x + MOUSE_TOLERANCE && mouseY >= y - MOUSE_TOLERANCE && mouseY <= y + MOUSE_TOLERANCE)
+        {
+            image(pin, x - 20, y - 64, 64, 64);
+        } else {
+            image(pin, x - 9, y - 32, 32, 32);
+        }
+        //println(item.name + " " + item.long + "," + item.lat + " " + x + "," + y);
+    }
+    void drawCross(item)
+    {
+        int cross = 4;
+        x = longToX(item.long);
+        y = latToY(item.lat);
+        if (mouseX >= x - MOUSE_TOLERANCE && mouseX <= x + MOUSE_TOLERANCE && mouseY >= y - MOUSE_TOLERANCE && mouseY <= y + MOUSE_TOLERANCE)
+            stroke(0, 255, 0);
+        else
+            stroke(255, 0, 0);
+        strokeWeight(2);
+        line(x - cross, y, x + cross, y);
+        line(x, y - cross, x, y + cross);
+    }
+    
+    void infoWindow(item, x, y)
+    {
+        noStroke();
+        fill(0, 0, 0, 128);
+        rect(x, y, 200, 100, 10);
+        
+        textFont("Helvetica");
+        textSize(24);
+        y += 30;
+        
+        // City name, shadow
+        fill(0, 0, 0, 255);
+        text(item.name, x + 5 + 2, y + 2);
+        // City name
+        fill(0, 255, 0, 255);
+        text(item.name, x + 5, y);
+        
+        textSize(18);
+        y += 25;
+        
+        // Twitter, shadow
+        fill(0, 0, 0, 255);
+        text(item.twitter, x + 5 + 1, y + 1);
+        // Twitter
+        fill(0, 200, 0, 255);
+        text(item.twitter, x + 5, y);
+        y += 25;
+        
+        // Facebook, shadow
+        fill(0, 0, 0, 255);
+        text(item.facebook, x + 5 + 1, y + 1);
+        // Facebook
+        fill(0, 200, 0, 255);
+        text(item.facebook, x + 5, y);
+    }
+
+    boolean checkPopup(item)
+    {
+        x = longToX(item.long);
+        y = latToY(item.lat);
+        // If (mouseX, mouseY) is within (x,y) of pushpin, then also draw a popup dialog
+        if (mouseX >= x - MOUSE_TOLERANCE && mouseX <= x + MOUSE_TOLERANCE && mouseY >= y - MOUSE_TOLERANCE && mouseY <= y + MOUSE_TOLERANCE)
+        {
+            image(pin, x - 20, y - 64, 64, 64);
+            hoverLink = item.link;
+            cursor(HAND);
+            infoWindow(item, x - 10, y + 10);
+            return true;
+        }
+        return false;
+    }
+
+    void mouseClicked()
+    {
+        if (mouseY >= height - 12 && mouseX < width / 2)
+        {
+            link("http://commons.wikimedia.org/wiki/File:World_map_blank_without_borders.svg");
+            waitCursor = 1;
+        }
+        if (hoverLink.length != 0)
+        {
+            link(hoverLink);
+            waitCursor = 1;
+        }
+    }
+
+    void draw()
+    {
+        image(map, 0, 0, width, height);
+        for (var i = 0; i < CITIES.length; i++)
+            drawPin(CITIES[i]);
+        for (var i = 0; i < CITIES.length; i++)
+            drawCross(CITIES[i]);
+        hoverLink = '';
+        cursor(ARROW);
+        for (var i = 0; i < CITIES.length; i++)
+            if (checkPopup(CITIES[i]))
+                break;
+        
+        noStroke();
+        fill(0);
+        textFont("Helvetica");
+        textSize(9);
+        text("Map copyright Wikimedia Commons, licensed under the Creative Commons", 0, height);
+        if (mouseY >= height - 12 && mouseX < width / 2)
+            cursor(HAND);
+        if (waitCursor)
+            cursor(WAIT);
+
+    }
+    </script>
+    <style type="text/css" media="screen">
+    </style>
+</head>
+<body id="pp_map" onload="">
+    <canvas id="mapCanvas" width="640" height="356"></canvas>
+    <!-- div id="mapCanvas"></div -->
+</body>
+<!-- vim: set expandtab:shiftwidth=4:tabstop=4:smarttab:autoindent:autoindent -->
+</html>
+
