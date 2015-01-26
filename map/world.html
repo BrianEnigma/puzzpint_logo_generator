@@ -6,48 +6,23 @@
     <!-- script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.3.15/p5.min.js"></script -->
     <script type="text/javascript" src="processing.min.js"></script>
     <script type="text/processing" data-processing-target="mapCanvas">
-    /* @pjs preload="map02.png,pintpin2.png,pintpin2-sm.png"; */
+        /* @pjs preload="world.png,pintpin.png"; */
 
     var map;
     var pin;
-    var pinSmall;
     
-    // ####################################################################
-    // Assorted globals and constants. Don't touch these.
+    final int X_FUDGE_FACTOR = -20;
+    final int Y_FUDGE_FACTOR = -8;
+    final int MOUSE_TOLERANCE = 5;
     string hoverLink = '';
     int waitCursor = 0;
-    final int SMALL_PIN_SIZE = 32;
-    final int MOUSE_TOLERANCE = SMALL_PIN_SIZE / 2;
-    final int INFO_WIDTH = 250;
-    final int INFO_HEIGHT = 100;
-    // ####################################################################
-    
-    // ####################################################################
-    // Stuff to calculate Lat/Long to pixel ratios. You'll only need to touch
-    // these if you swap out to a map covering a different area.
-    final int PORTLAND_X = 62;      // X position of Portland on the map
-    final int BOSTON_X = 795;       // X position of Boston on the map
-    final float PORTLAND_LONG = 122.6819;
-    final float BOSTON_LONG = 71.0636;
-    final float LONG_PER_PIXEL = (PORTLAND_LONG - BOSTON_LONG) / (float) (BOSTON_X - PORTLAND_X);
-    final float LEFT_EDGE_LONG = -1 * PORTLAND_LONG - (float) PORTLAND_X * LONG_PER_PIXEL;
-    // --------------------------------------------------------------------
-    final int PORTLAND_Y = 80;      // Y position of Portland on the map
-    final int MIAMI_Y = 429;        // Y position of Boston on the map
-    final float PORTLAND_LAT = 45.5200;
-    final float MIAMI_LAT = 25.7877;
-    final float LAT_PER_PIXEL = (PORTLAND_LAT - MIAMI_LAT) / (float) (MIAMI_Y - PORTLAND_Y);
-    final float TOP_EDGE_LAT = PORTLAND_LAT + (float) PORTLAND_Y * LAT_PER_PIXEL;
-    // ####################################################################
    
-    // ####################################################################
-    // Puzzled Pint Cities. As we add cities, add them here, copying the format and
-    // style of existing entries. You can find the 'lat' and 'long' fields with a 
-    // Google search, for instance "portland gps coordinates".
+    /* pint glass icon with drop shadow (like Google Earth) */
+
     var CITIES = [
         {
             name : 'Portland',
-            lat : 45.5200,
+            lat : 45.5200 - 3 /* visually offset from Seattle */,
             long : -122.6819,
             twitter : '@PuzzPintPDX',
             facebook : 'fb.com/PuzzPintPDX',
@@ -64,9 +39,17 @@
         {
             name : 'Seattle, East',
             lat : 47.6694,
-            long : -122.1239 + 1 /* visually offset it */,
+            long : -122.1239 + 5 /* visually offset it */,
             twitter : '@PuzzPintSeattle',
             facebook : 'fb.com/PuzzPintSeattle',
+            link : 'http://puzzledpint.com/about/',
+        },
+        {
+            name : 'London',
+            lat : 51.5072,
+            long : 0.1275,
+            twitter : '@PuzzPintLondon',
+            facebook : 'fb.com/PuzzPintLondon',
             link : 'http://puzzledpint.com/about/',
         },
         {
@@ -136,33 +119,46 @@
     ];
     void setup() 
     {
-        size(877, 500);
+        size(640, 356);
         // You can swap out the map image, but the projection needs to be a grid:
         // longitude and latitude, at right angles, at regular spacing.
-        map = loadImage("map02.png");
-        pin = loadImage("pintpin2.png");
-        pinSmall = loadImage("pintpin2-sm.png");
+        map = loadImage("world.png");
+        pin = loadImage("pintpin.png");
     }
 
-    int latToY(lat) {return (TOP_EDGE_LAT - lat) / LAT_PER_PIXEL;}
-    int longToX(long) {return -1 * (LEFT_EDGE_LONG - long) / LONG_PER_PIXEL;}
+    int latToY(lat) {return (height / 2 - height * lat / 90.0 / 2 + height + Y_FUDGE_FACTOR) % height;}
+    int longToX(long) {return (width / 2 + width * long / 180.0 / 2 + width + X_FUDGE_FACTOR) % width;}
     void drawPin(item)
     {
         x = longToX(item.long);
         y = latToY(item.lat);
         if (mouseX >= x - MOUSE_TOLERANCE && mouseX <= x + MOUSE_TOLERANCE && mouseY >= y - MOUSE_TOLERANCE && mouseY <= y + MOUSE_TOLERANCE)
         {
-            image(pin, x - 32, y - 32, 64, 64);
+            image(pin, x - 20, y - 64, 64, 64);
         } else {
-            image(pinSmall, x - SMALL_PIN_SIZE / 2, y - SMALL_PIN_SIZE / 2, SMALL_PIN_SIZE, SMALL_PIN_SIZE);
+            image(pin, x - 9, y - 32, 32, 32);
         }
+        //println(item.name + " " + item.long + "," + item.lat + " " + x + "," + y);
     }
-
+    void drawCross(item)
+    {
+        int cross = 4;
+        x = longToX(item.long);
+        y = latToY(item.lat);
+        if (mouseX >= x - MOUSE_TOLERANCE && mouseX <= x + MOUSE_TOLERANCE && mouseY >= y - MOUSE_TOLERANCE && mouseY <= y + MOUSE_TOLERANCE)
+            stroke(0, 255, 0);
+        else
+            stroke(255, 0, 0);
+        strokeWeight(2);
+        line(x - cross, y, x + cross, y);
+        line(x, y - cross, x, y + cross);
+    }
+    
     void infoWindow(item, x, y)
     {
         noStroke();
-        fill(0, 0, 0, 192);
-        rect(x, y, INFO_WIDTH, INFO_HEIGHT, 10);
+        fill(0, 0, 0, 128);
+        rect(x, y, 200, 100, 10);
         
         textFont("Helvetica");
         textSize(24);
@@ -177,7 +173,6 @@
         
         textSize(18);
         y += 25;
-        x += 10;
         
         // Twitter, shadow
         fill(0, 0, 0, 255);
@@ -185,7 +180,7 @@
         // Twitter
         fill(0, 200, 0, 255);
         text(item.twitter, x + 5, y);
-        y += 22;
+        y += 25;
         
         // Facebook, shadow
         fill(0, 0, 0, 255);
@@ -193,15 +188,6 @@
         // Facebook
         fill(0, 200, 0, 255);
         text(item.facebook, x + 5, y);
-        y += 16;
-        
-        // Click for more info
-        textSize(12);
-        fill(0, 0, 0, 255);
-        text("click for more detail", x + 5 + 1, y + 1);
-        // Facebook
-        fill(0, 200, 0, 255);
-        text("click for more detail", x + 5, y);
     }
 
     boolean checkPopup(item)
@@ -211,14 +197,10 @@
         // If (mouseX, mouseY) is within (x,y) of pushpin, then also draw a popup dialog
         if (mouseX >= x - MOUSE_TOLERANCE && mouseX <= x + MOUSE_TOLERANCE && mouseY >= y - MOUSE_TOLERANCE && mouseY <= y + MOUSE_TOLERANCE)
         {
-            image(pin, x - 32, y - 32, 64, 64);
+            image(pin, x - 20, y - 64, 64, 64);
             hoverLink = item.link;
             cursor(HAND);
-            if (x > width / 2)
-                x -= INFO_WIDTH;
-            if (y > height / 2)
-                y -= INFO_HEIGHT;
-            infoWindow(item, x, y);
+            infoWindow(item, x - 10, y + 10);
             return true;
         }
         return false;
@@ -243,22 +225,21 @@
         image(map, 0, 0, width, height);
         for (var i = 0; i < CITIES.length; i++)
             drawPin(CITIES[i]);
+        for (var i = 0; i < CITIES.length; i++)
+            drawCross(CITIES[i]);
         hoverLink = '';
         cursor(ARROW);
         for (var i = 0; i < CITIES.length; i++)
             if (checkPopup(CITIES[i]))
                 break;
         
-        if (false)
-        {
-            noStroke();
-            fill(0);
-            textFont("Helvetica");
-            textSize(9);
-            text("Map copyright Wikimedia Commons, licensed under the Creative Commons", 0, height);
-            if (mouseY >= height - 12 && mouseX < width / 2)
-                cursor(HAND);
-        }
+        noStroke();
+        fill(0);
+        textFont("Helvetica");
+        textSize(9);
+        text("Map copyright Wikimedia Commons, licensed under the Creative Commons", 0, height);
+        if (mouseY >= height - 12 && mouseX < width / 2)
+            cursor(HAND);
         if (waitCursor)
             cursor(WAIT);
 
