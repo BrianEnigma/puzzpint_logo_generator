@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>Polaroid Test</title>
+    <style type="text/css" media="screen">
+        #polaroidBox {
+            width: 338px;
+            height:363px;
+            margin: 0 auto;
+        }
+        #polaroid {
+        }
+        #polaroidContent {
+            transform:  translate(45px, -317px) rotate(-21.055deg);
+        }
+        #description {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body onload="">
+    <div id="polaroidBox">
+        <img src="polaroid.png" width="338" height="363" id="polaroid" />
+        <img src="colorbars.png" width="228" height="228" id="polaroidContent" />
+    </div>
+    <div id="description">
+        <a href="polaroid.png">polaroid.png</a> + <a href="colorbars.png">colorbars.png</a> with translate(45px, -317px) and rotate(-21.055&deg;)
+    </div>
+</body>
+</html>
